@@ -1,0 +1,49 @@
+name: microservices-deployment
+
+services:
+  postgresdb:
+    image: postgres:16-alpine
+    container_name: postgresdb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Root@1234
+      POSTGRES_DB: skillexam-db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d skillexam-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - microservices-network
+
+  exam-service:
+    image: tammanajoshit/docker-skill-exam-2400032515:latest
+    build:
+      context: ./AssignmentTask
+      dockerfile: Dockerfile
+    container_name: exam-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresdb:5432/skillexam-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Root@1234
+    ports:
+      - "9001:8081"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - microservices-network
+
+volumes:
+  postgres_data:
+
+networks:
+  microservices-network:
+    driver: bridge
