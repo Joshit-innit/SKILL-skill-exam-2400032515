@@ -1,6 +1,7 @@
 package com.example.ms.service;
 
 import java.util.List;
+import java.util.Optional;
 
 
 import org.springframework.stereotype.Service;
@@ -27,6 +28,17 @@ public class TaskServiceImpl implements TaskService {
 	@Override
 	public List<EMI> getAllEMI() {
 		return repo.findAll();
+	}
+
+	@Override
+	public Optional<EMI> updateEMI(long id, EMI emi) {
+		return repo.findById(id).map(existing -> {
+			existing.setName(emi.getName());
+			existing.setType(emi.getType());
+			existing.setStatus(emi.isStatus());
+			existing.setLocation(emi.getLocation());
+			return repo.save(existing);
+		});
 	}
 
 	@Override
